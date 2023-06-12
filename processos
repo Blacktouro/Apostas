@@ -1,0 +1,177 @@
+var apostas = [];
+var bancaInicialMes = 100;
+var bancaAtual = parseFloat(localStorage.getItem('bancaAtual')) || bancaInicialMes;
+
+function adicionarAposta() {
+    var data = document.getElementById('data-input').value;
+    var liga = document.getElementById('liga-input').value;
+    var equipa = document.getElementById('equipa-input').value;
+    var odd = parseFloat(document.getElementById('odd-input').value);
+    var porcentagem = parseFloat(document.getElementById('porcentagem-input').value);
+    var tipoAposta = document.getElementById('tipo-aposta-input').value;
+    var valorMes = parseFloat(document.getElementById('valor-mes').value);
+    var valorAtualAposta = parseFloat(document.getElementById('valor-atual-aposta').value);
+
+    if (!data || !liga || !equipa || isNaN(odd) || isNaN(porcentagem)) {
+        alert('Por favor, preencha todos os campos corretamente.');
+        return;
+    }
+
+    var novaAposta = {
+        data: data,
+        liga: liga,
+        equipa: equipa,
+        bancaInicial: bancaAtual,
+        odd: odd,
+        resultado: '',
+        tipoAposta: tipoAposta,
+        valorApostado: valorAtualAposta
+    };
+
+    apostas.push(novaAposta);
+
+    atualizarApostas();
+    atualizarEstatisticas();
+
+    // Limpar campos de entrada
+    document.getElementById('data-input').value = '';
+    document.getElementById('liga-input').value = '';
+    document.getElementById('equipa-input').value = '';
+    document.getElementById('odd-input').value = '';
+    document.getElementById('porcentagem-input').value = '';
+    document.getElementById('tipo-aposta-input').value = '';
+}
+
+
+function marcarResultado(index, ganhou) {
+    var aposta = apostas[index];
+    aposta.resultado = ganhou ? 'Ganhou' : 'Perdeu';
+
+    if (ganhou) {
+        var valorGanho = aposta.valorApostado * aposta.odd;
+        bancaAtual += valorGanho;
+      } else {
+        bancaAtual -= aposta.valorApostado;
+      }
+
+    atualizarApostas();
+    atualizarEstatisticas();
+}
+
+function atualizarApostas() {
+    var tabelaApostas = document.getElementById('apostas-body');
+    tabelaApostas.innerHTML = '';
+
+    for (var i = 0; i < apostas.length; i++) {
+        var aposta = apostas[i];
+
+        var novaLinha = tabelaApostas.insertRow();
+
+        var colunaData = novaLinha.insertCell();
+        colunaData.innerText = aposta.data;
+
+        var colunaLiga = novaLinha.insertCell();
+        colunaLiga.innerText = aposta.liga;
+
+        var colunaEquipa = novaLinha.insertCell();
+        colunaEquipa.innerText = aposta.equipa;
+
+        var colunaBancaInicial = novaLinha.insertCell();
+        colunaBancaInicial.innerText = aposta.bancaInicial.toFixed(2);
+
+        var colunaOdd = novaLinha.insertCell();
+        colunaOdd.innerText = aposta.odd;
+
+        var colunaResultado = novaLinha.insertCell();
+        colunaResultado.innerText = aposta.resultado;
+
+        var colunaTipoAposta = novaLinha.insertCell();
+        colunaTipoAposta.innerText = aposta.tipoAposta;
+
+        var colunaValorApostado = novaLinha.insertCell();
+        colunaValorApostado.innerText = aposta.valorApostado.toFixed(2);
+
+        var colunaAcao = novaLinha.insertCell();
+
+        var ganhouButton = document.createElement('button');
+        ganhouButton.innerText = 'Ganhou';
+        ganhouButton.onclick = (function (index) {
+            return function () {
+                marcarResultado(index, true);
+            };
+        })(i);
+        colunaAcao.appendChild(ganhouButton);
+
+        var perdeuButton = document.createElement('button');
+        perdeuButton.innerText = 'Perdeu';
+        perdeuButton.onclick = (function (index) {
+            return function () {
+                marcarResultado(index, false);
+            };
+        })(i);
+        colunaAcao.appendChild(perdeuButton);
+
+        var colunaRemover = novaLinha.insertCell();
+        var removerButton = document.createElement('button');
+        removerButton.innerText = 'Remover';
+        removerButton.onclick = (function (index) {
+            return function () {
+                removerAposta(index);
+            };
+        })(i);
+        colunaRemover.appendChild(removerButton);
+
+        // Altera a cor do row com base no resultado da aposta
+        if (aposta.resultado === 'Ganhou') {
+            novaLinha.style.backgroundColor = 'green';
+        } else if (aposta.resultado === 'Perdeu') {
+            novaLinha.style.backgroundColor = 'red';
+        }
+    }
+}
+
+function atualizarEstatisticas() {
+    var totalApostas = apostas.length;
+    var totalGanhos = 0;
+    var totalPerdidos = 0;
+
+    for (var i = 0; i < apostas.length; i++) {
+        var aposta = apostas[i];
+
+        if (aposta.resultado === 'Ganhou') {
+            totalGanhos += aposta.valorApostado * aposta.odd;
+        } else if (aposta.resultado === 'Perdeu') {
+            totalPerdidos += aposta.valorApostado;
+        }
+    }
+
+    var lucroTotal = totalGanhos - totalPerdidos;
+    var porcentagemGanhos = (totalGanhos / (totalGanhos + totalPerdidos)) * 100 || 0;
+    var porcentagemPerdidos = (totalPerdidos / (totalGanhos + totalPerdidos)) * 100 || 0;
+    var percentagemApostado = ((totalGanhos + totalPerdidos) / bancaAtual) * 100 || 0;
+
+    var resultadosDiv = document.getElementById('resultados');
+    resultadosDiv.innerHTML = '<strong>Resultados:</strong><br>' +
+        'Total de apostas: ' + totalApostas + '<br>' +
+        'Total ganhos: €' + totalGanhos.toFixed(2) + '<br>' +
+        'Total perdidos: €' + totalPerdidos.toFixed(2) + '<br>' +
+        'Lucro total: €' + lucroTotal.toFixed(2) + '<br>' +
+        'Porcentagem de ganhos: ' + porcentagemGanhos.toFixed(2) + '%<br>' +
+        'Porcentagem de perdidos: ' + porcentagemPerdidos.toFixed(2) + '%<br>';
+
+    var estatisticasDiv = document.getElementById('estatisticas');
+    estatisticasDiv.innerHTML = '<strong>Estatísticas:</strong><br>' +
+        'Banca inicial do mês: €' + bancaInicialMes.toFixed(2) + '<br>' +
+        'Banca atual: €' + bancaAtual.toFixed(2) + '<br>' +
+        'Valor apostado em percentagem da banca: ' + percentagemApostado.toFixed(2) + '%<br>' +
+        'Valor apostado: €' + (totalGanhos + totalPerdidos).toFixed(2) + '<br>' +
+        'Valor ganho: €' + totalGanhos.toFixed(2) + '<br>' +
+        'Valor perdido: €' + totalPerdidos.toFixed(2) + '<br>';
+
+    var bancaAtualLabel = document.createElement('p');
+    bancaAtualLabel.innerText = 'Banca Atual: €' + bancaAtual.toFixed(2);
+    estatisticasDiv.appendChild(bancaAtualLabel);
+}
+
+
+atualizarEstatisticas();

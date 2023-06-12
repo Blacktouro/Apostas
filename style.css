@@ -1,0 +1,53 @@
+   /* Estilos CSS */
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+    }
+
+    h1 {
+        text-align: center;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+    }
+
+    tr:hover {
+        background-color: #f5f5f5;
+    }
+
+    .ganhou {
+        color: green;
+    }
+
+    .perdeu {
+        color: red;
+    }
+
+    .ganhou-row {
+        background-color: #1dec35;
+    }
+
+    .perdeu-row {
+        background-color: #e72020;
+    }
+
+    #banca-atual {
+        font-weight: bold;
+    }
+
+    .container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 50px;
+        
+    }
